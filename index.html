@@ -156,7 +156,25 @@
             page++;
             searchImages();
         });
-    </script>
-</body>
-</html>
+    <script>
+// Yahan dusra wala code paste kar dein
+function loadAdminImages() {
+    let adminImages = JSON.parse(localStorage.getItem('admin_images')) || [];
+    const galleryContainer = document.getElementById('gallery'); 
+    if(galleryContainer) {
+        adminImages.forEach(img => {
+            const imgHTML = `
+                <div class="image-box">
+                    <img src="${img.url}" alt="${img.title}">
+                    <p>${img.title}</p>
+                </div>
+            `;
+            galleryContainer.innerHTML += imgHTML;
+        });
+    }
+}
+window.onload = function() {
+    loadAdminImages();
+};
+</script>
 
