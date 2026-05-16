@@ -51,6 +51,10 @@
             object-fit: cover;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        #image-container img:hover {
+            transform: scale(1.02);
         }
         #show-more-btn {
             margin: 20px 0 50px;
@@ -69,7 +73,7 @@
     <h1>Image Search Website</h1>
     
     <form id="search-form">
-        <input type="text" id="search-box" placeholder="Search images (e.g. Nature, Cars)...">
+        <input type="text" id="search-box" placeholder="Search images (e.g. Nature, Cars)..." required>
         <button type="submit">Search</button>
     </form>
 
@@ -77,7 +81,9 @@
     <button id="show-more-btn">Show More</button>
 
     <script>
-        const accessKey = vkEfwRYWYXzX2kU9_8M9WoVuGhvH9Scb4qvdl57Fzfk
+        // FIX: API Key ko string ke roop mein quotes "" ke andar daala hai
+        const accessKey = "vkEfwRYWYXzX2kU9_8M9WoVuGhvH9Scb4qvdl57Fzfk"; 
+        
         const searchForm = document.getElementById("search-form");
         const searchBox = document.getElementById("search-box");
         const imageContainer = document.getElementById("image-container");
@@ -87,25 +93,57 @@
         let page = 1;
 
         async function searchImages() {
-            keyword = searchBox.value;
+            keyword = searchBox.value.trim();
+            if (!keyword) return; // Khali search rokne ke liye
+
             const url = `https://api.unsplash.com/search/photos?page=${page}&query=${keyword}&client_id=${accessKey}&per_page=12`;
 
-            const response = await fetch(url);
-            const data = await response.json();
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error("API Request Failed! Check your Access Key or Domain restrictions.");
+                }
 
-            if(page === 1) imageContainer.innerHTML = "";
+                const data = await response.json();
 
-            const results = data.results;
-            results.map((result) => {
-                const image = document.createElement("img");
-                image.src = result.urls.small;
-                const imageLink = document.createElement("a");
-                imageLink.href = result.links.html;
-                imageLink.target = "_blank";
-                imageLink.appendChild(image);
-                imageContainer.appendChild(imageLink);
-            });
-            showMoreBtn.style.display = "block";
+                if (page === 1) {
+                    imageContainer.innerHTML = "";
+                }
+
+                const results = data.results;
+
+                if (results.length === 0) {
+                    imageContainer.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#666;'>No images found. Try another keyword!</p>";
+                    showMoreBtn.style.display = "none";
+                    return;
+                }
+
+                results.map((result) => {
+                    const image = document.createElement("img");
+                    image.src = result.urls.small;
+                    image.alt = result.alt_description || "Unsplash Image";
+                    
+                    const imageLink = document.createElement("a");
+                    imageLink.href = result.links.html;
+                    imageLink.target = "_blank";
+                    
+                    imageLink.appendChild(image);
+                    imageContainer.appendChild(imageLink);
+                });
+
+                // Agar 12 se kam images aayi hain toh Show More button hide kar do
+                if (results.length < 12) {
+                    showMoreBtn.style.display = "none";
+                } else {
+                    showMoreBtn.style.display = "block";
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+                imageContainer.innerHTML = `<p style='grid-column: 1/-1; text-align:center; color:red;'>Something went wrong: ${error.message}</p>`;
+                showMoreBtn.style.display = "none";
+            }
         }
 
         searchForm.addEventListener("submit", (e) => {
@@ -121,3 +159,4 @@
     </script>
 </body>
 </html>
+
