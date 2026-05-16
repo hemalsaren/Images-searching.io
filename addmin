@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Search - Admin Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #333; margin-bottom: 20px; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        input:focus { border-color: #007bff; outline: none; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background-color: #0056b3; }
+        .hidden { display: none; }
+        .image-item { background: #f8f9fa; border: 1px solid #eee; padding: 10px; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .delete-btn { background: #dc3545; width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
+        .delete-btn:hover { background: #bd2130; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN FORM -->
+    <div id="login-box" class="box">
+        <h2>Admin Login</h2>
+        <input type="password" id="password-input" placeholder="Enter Admin Password">
+        <button onclick="checkPassword()">Login</button>
+        <p id="error-msg" style="color: red; font-size: 14px;"></p>
+    </div>
+
+    <!-- MAIN DASHBOARD (Shuru me hidden rahega) -->
+    <div id="dashboard-box" class="box hidden" style="max-width: 500px;">
+        <h2>Admin Dashboard</h2>
+        <p style="color: green; font-weight: bold;">Logged In Successfully!</p>
+        <hr>
+        <h3>Add New Image</h3>
+        <input type="text" id="img-title" placeholder="Image Title / Name">
+        <input type="url" id="img-url" placeholder="Paste Image Link (URL)">
+        <button onclick="addImage()">Add to Website</button>
+        
+        <hr>
+        <h3>Current Added Images</h3>
+        <div id="image-list"></div>
+        <button onclick="logout()" style="background-color: #6c757d; margin-top: 20px;">Logout</button>
+    </div>
+
+    <script>
+        // AAPKA SECRET PASSWORD
+        const SECRET_PASSWORD = "Admin@123"; 
+
+        // Login Check Function
+        function checkPassword() {
+            const input = document.getElementById('password-input').value;
+            if(input === SECRET_PASSWORD) {
+                document.getElementById('login-box').classList.add('hidden');
+                document.getElementById('dashboard-box').classList.remove('hidden');
+                showUploadedImages();
+            } else {
+                document.getElementById('error-msg').innerText = "Wrong Password! Try again.";
+            }
+        }
+
+        // Image Add karne ka function
+        function addImage() {
+            const title = document.getElementById('img-title').value;
+            const url = document.getElementById('img-url').value;
+
+            if(!title || !url) {
+                alert("Please fill both Title and Image URL");
+                return;
+            }
+
+            // Purana data nikalna localstorage se
+            let existingImages = JSON.parse(localStorage.getItem('admin_images')) || [];
+            
+            // Naya image data jodna
+            existingImages.push({ title: title, url: url });
+            
+            // Wapas save karna
+            localStorage.setItem('admin_images', JSON.stringify(existingImages));
+
+            // Inputs khali karna
+            document.getElementById('img-title').value = '';
+            document.getElementById('img-url').value = '';
+
+            alert("Image added successfully!");
+            showUploadedImages();
+        }
+
+        // Dashboard par uploaded images dikhane ke liye
+        function showUploadedImages() {
+            const listDiv = document.getElementById('image-list');
+            listDiv.innerHTML = '';
+            let existingImages = JSON.parse(localStorage.getItem('admin_images')) || [];
+
+            if(existingImages.length === 0) {
+                listDiv.innerHTML = "<p style='color: #888;'>No images added yet.</p>";
+                return;
+            }
+
+            existingImages.forEach((img, index) => {
+                listDiv.innerHTML += `
+                    <div class="image-item">
+                        <span><strong>${img.title}</strong></span>
+                        <button class="delete-btn" onclick="deleteImage(${index})">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Image delete karne ke liye
+        function deleteImage(index) {
+            let existingImages = JSON.parse(localStorage.getItem('admin_images')) || [];
+            existingImages.splice(index, 1);
+            localStorage.setItem('admin_images', JSON.stringify(existingImages));
+            showUploadedImages();
+        }
+
+        function logout() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
